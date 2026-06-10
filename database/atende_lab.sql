@@ -1,71 +1,94 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1:3307
--- Generation Time: Jun 03, 2026 at 02:30 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+CREATE DATABASE IF NOT EXISTS atende_lab
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_general_ci;
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
+USE atende_lab;
 
+CREATE TABLE usuarios (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    senha VARCHAR(255) NOT NULL,
+    perfil ENUM('admin', 'atendente') DEFAULT 'atendente',
+    status ENUM('ativo', 'inativo') DEFAULT 'ativo',
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+/* TESTE DA TABELA USUARIO */
+INSERT INTO usuarios (nome, email, senha, perfil, status)
+VALUES (
+    'Administrador',
+    'admin@atendelab.com',
+    '$2y$10$J9P2kU2BAMZ3TZcuxTsW4e1D/lka8EocYHzvyoOZmCNcWDQz3RuVC',
+    'admin',
+    'ativo'
+);
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+CREATE TABLE pessoas (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    documento VARCHAR(20) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    telefone VARCHAR(20) NOT NULL,
+    curso VARCHAR(100) NOT NULL,
+    periodo VARCHAR(100) NOT NULL,
+    status VARCHAR(100) NOT NULL,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+/* TESTE DA TABELA PESSOAS */
+INSERT INTO pessoas (nome, documento, email, telefone, curso, periodo, status)
+VALUES (
+    'Matheus',
+    'documento',
+    'matheus@gmail.com',
+    '+55 (47)11223-4456',
+    'engenharia de software',
+    '5º Semestre',
+    'ativo'
+);
 
---
--- Database: `atende_lab`
---
+CREATE TABLE tipo_atendimento (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    descricao TEXT NOT NULL,
+    status ENUM('ativo', 'inativo') DEFAULT 'ativo',
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+/* TESTE DA TABELA TIPO_ATENDIMENTO */
+INSERT INTO tipo_atendimento (nome, descricao, status)
+VALUES (
+    'Boletim',
+    'Solicitação de boletim escolar',
+    'ativo'
+)
 
--- --------------------------------------------------------
+CREATE TABLE atendimentos (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    id_tipo_atendimento INT NOT NULL,
+    id_pessoa INT NOT NULL,
+    id_usuario INT NOT NULL,
+    data_atendimento DATE NOT NULL,
+    hora_atendimento TIME NOT NULL,
+    descricao TEXT NOT NULL,
+    observacao_final TEXT NOT NULL,
+    status ENUM('ativo', 'inativo') DEFAULT 'ativo',
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
---
--- Table structure for table `usuarios`
---
-
-CREATE TABLE `usuarios` (
-  `id` int(11) NOT NULL,
-  `nome` varchar(100) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `senha` varchar(255) NOT NULL,
-  `perfil` enum('admin','atendente') DEFAULT 'atendente',
-  `status` enum('ativo','inativo') DEFAULT 'ativo',
-  `criado_em` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `usuarios`
---
-
-INSERT INTO `usuarios` (`id`, `nome`, `email`, `senha`, `perfil`, `status`, `criado_em`) VALUES
-(1, 'Administrador', 'admin@atendelab.com', '$2y$10$J9P2kU2BAMZ3TZcuxTsW4e1D/lka8EocYHzvyoOZmCNcWDQz3RuVC', 'admin', 'ativo', '2026-06-03 00:08:16');
-
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `usuarios`
---
-ALTER TABLE `usuarios`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `usuarios`
---
-ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+    CONSTRAINT fk_atendimentos_tipo_atendimento
+        FOREIGN KEY(id_tipo_atendimento) REFERENCES tipo_atendimento(id),
+    CONSTRAINT fk_atendimentos_pessoas
+        FOREIGN KEY(id_pessoa) REFERENCES pessoas(id),
+    CONSTRAINT fk_atendimentos_usuarios
+        FOREIGN KEY(id_usuario) REFERENCES usuarios(id)
+);
+/* TESTE DA TABELA ATENDIMENTOS */
+INSERT INTO atendimentos (id_tipo_atendimento, id_pessoa, id_usuario, data_atendimento, hora_atendimento, descricao, observacao_final, status)
+VALUES (
+    1,
+    1,
+    1,
+    '2026-06-09',
+    '20:58:00',
+    'Solicitação de boletim escolar',
+    'Solicitação completa e documento enviado',
+    'inativo'
+)
