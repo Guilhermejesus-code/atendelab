@@ -10,7 +10,7 @@ $action = $_GET['action'] ?? 'index';
 
 switch ($controller) {
     case 'auth';
-        $authcontroller = new AuthController();
+        $authController = new AuthController();
 
         switch($action) {
             case 'login':
