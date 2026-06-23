@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Login - Atendelab</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -29,13 +28,13 @@
                                     'UTF-8'
                                 ) ?>
                             </div>
-                        <?php endif; ?>
-
+                        <?php endif;?>
+                        
                         <?php if (!empty($mensagem)): ?>
-                            <div class="alert alert-sucess">
+                            <div class="alert alert-success">
                                 <?= htmlspecialchars(
                                     $mensagem,
-                                    EMT_QUOTES,
+                                    ENT_QUOTES,
                                     'UTF-8'
                                 ) ?>
                             </div>
@@ -55,12 +54,14 @@
                                 <label for="senha" class="form-label">
                                     Senha
                                 </label>
+
+                                <input type="password" name="senha" id="senha" class="form-control" required>
                             </div>
 
                             <button type="submit" class="btn btn-primary w-100">
                                 Entrar
                             </button>
-                    
+
                         </form>
                     </div>
                 </div>
