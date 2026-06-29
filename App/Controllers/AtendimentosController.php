@@ -1,12 +1,12 @@
 <?php
 
-class AtendimentosController 
+class AtendimentosController
 {
     private PDO $pdo;
 
     public function __construct()
     {
-        require __DIR__ . '/../../config/database.php';
+        require __DIR__ . '/../../Config/database.php';
         $this->pdo = $pdo;
     }
 
@@ -23,18 +23,18 @@ class AtendimentosController
                     t.nome AS tipo_nome,
                     u.nome AS responsavel_nome,
                     a.descricao, a.status,
-                    a.data_atendimento. a.horario_atendimento,
+                    a.data_atendimento, a.hora_atendimento,
                     a.observacao_final
                     FROM atendimentos a
-                    INNSER JOIN pessoas p ON p.id = a.id_pessoa
-                    INNER JOIN tipos_atendimentos t 
-                        ON t.id = a.id_tipo_atendimento
-                    INNER JOIN usuarios u ON u.id = a.id_usuario
+                    INNER JOIN pessoas p ON p.id = a.pessoa_id
+                    INNER JOIN tipos_atendimento t 
+                        ON t.id = a.tipo_atendimento_id
+                    INNER JOIN usuarios u ON u.id = a.usuario_id
                     ORDER BY a.id DESC';
-                $this->json($this->pdo->query($sql)->fetchALL(PDO:FETCH_ASSOC));                
+        $this->json($this->pdo->query($sql)->fetchALL(PDO::FETCH_ASSOC));
     }
 
-    public function buscar: void
+    public function buscar(): void
     {
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
         if (!$id) {
@@ -48,12 +48,12 @@ class AtendimentosController
             FROM atendimentos a 
             INNER JOIN pessoas p ON p.id = a.id_pessoa
             INNER JOIN tipos_atendimentos t 
-                ON t.id = a.id_tipo_atendimento
-            INNER JOIN usuarios u ON u.id = a.id_usuario
+                ON t.id = a.tipo_atendimento_id
+            INNER JOIN usuarios u ON u.id = a.usuario_id
             WHERE a.id = :id'
         );
         $stmt->execute(['id' => $id]);
-        $atendimento = $stmt -> tech(PDO::FETCH_ASSOC);
+        $atendimento = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$atendimento) {
             $this->json(['erro' => 'Atendimento não encontrado.'], 404);
@@ -62,52 +62,88 @@ class AtendimentosController
         $this->json($atendimento);
     }
 
-    public functino criar(): void
+    public function criar(): void
     {
         $pessoaID = filter_var(
-            $_POST['id_pessoa'] ?? null,
+            $_POST['pessoa_id'] ?? null,
             FILTER_VALIDATE_INT
         );
         $tipoId = filter_var(
-            $_POST['id_tipo_atendimento'] ?? null,
+            $_POST['tipo_atendimento_id'] ?? null,
             FILTER_VALIDATE_INT
         );
         $usuarioId = filter_var(
-            $_POST['id_usuario'] ?? null,
+            $_POST['usuario_id'] ?? null,
             FILTER_VALIDATE_INT
         );
         $descricao = trim($_POST['descricao'] ?? '');
         $data = $_POST['data_atendimento'] ?? '';
         $horario = $_POST['horario_atendimento'] ?? '';
         $status = $_POST['status'] ?? 'aberto';
-        
-        if(!$pessoaID || !$tipoId || !$usuarioId ||
-            $descricao === '' $data ==='' || $horario '') {
-                $this->json(['erro' => 'Preencha os campos obrigatórios.'], 422);
-                return;
+
+        if (
+            !$pessoaID || !$tipoId || !$usuarioId ||
+            $descricao === '' || $data === '' || $horario === ''
+        ) {
+            $this->json(['erro' => 'Preencha os campos obrigatórios.'], 422);
+            return;
         }
-        if(!in_array($status, ['aberto', 'em_andamento'], true)) {
+        if (!in_array($status, ['aberto', 'em_andamento'], true)) {
             $this->json(['erro' => 'Status inicial inválido'], 422);
             return;
         }
 
-        $stmt = $this->pdo-prepare(
+        $stmt = $this->pdo->prepare(
             'INSERT INTO atendimentos 
-            (id_pessoa, id_tipo_atendimento, id_usuario, descricao, 
+            (pessoa_id, tipo_atendimento_id, usuario_id, descricao, 
             status, data_atendimento, horario_atendimento
             VALUES 
-            (:id_pessoa, :id_tipo_atendimento, :id_usuario, :descricao
-            :status,:data_atendimento, :horario_atendimento)'    
+            (:pessoa_id, :tipo_atendimento_id, :usuario_id, :descricao
+            :status,:data_atendimento, :horario_atendimento)'
         );
         $stmt->execute([
-            'id_pessoa' => $pessoaID,
-            'id_tipo_atendimento' => $tipoId,
-            'id_usuario' => $usuarioId,
+            'pessoa_id' => $pessoaID,
+            'tipo_atendimento_id' => $tipoId,
+            'usuario_id' => $usuarioId,
             'descricao' => $descricao,
             'status' => $status,
             'data_atendimento' => $data,
             'horario_atendimento' => $horario,
         ]);
         $this->json(['mensagem' => 'Atendimento resgitrado com sucesso.'], 201);
+    }
+
+    public function alterarStatus(): void
+    {
+        $id = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT);
+        $status = $_POST['status'] ?? '';
+        $observacao = trim($_POST['observacao_final'] ?? '');
+
+        if (!$id || !in_array(
+                $status,
+                ['aberto', 'em_andamento', 'concluido'],
+                true
+            )) {
+                $this->json(['erro' => 'ID ou status inválido'], 422);
+                return;
+        }
+        if ($status === 'concluido' && $observacao === '') {
+            $this->json([
+                'erro' => 'Informe a observação final para concluir'
+            ], 422);
+            return;
+        }
+
+        $stmt = $this->pdo->prepare(
+            'UPDATE atendimentos 
+            SET status = :status, observacao_final = :observacao
+            WHERE id = :id'
+        );
+        $stmt->execute([
+            'id' => $id,
+            'status' => $status,
+            'observacoes' => $observacao !== '' ? $observacao : null,
+        ]);
+        $this->json(['mensagem' => 'Status atualizado com sucesso.']);
     }
 }
