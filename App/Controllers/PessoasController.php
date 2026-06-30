@@ -136,10 +136,9 @@ class PessoasController
 
         try {
             $stmt = $this->pdo->prepare(
-                'UPDATE pessoas SET nome = :nome, documento = :documento, 
-                telefone = :telefone, email = : email, curso = :curso,
-                periodo = :periodo, status = :status,
-                observacoes = :observacoes WHERE id = :id'
+                'UPDATE pessoas SET nome = :nome, documento = :documento, email = :email, telefone = :telefone,
+                curso = :curso, periodo = :periodo, status = :status, observacoes = :observacoes
+                WHERE id = :id'
             );
             $stmt->execute(compact( 
                 'id','nome','documento','telefone','email','curso',
